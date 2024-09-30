@@ -625,6 +625,50 @@ export class EditorToolbar extends React.Component {
     }
   };
 
+  // Utility to get the entry slug from the URL
+  getEntrySlug = () => {
+    const pathArray = window.location.pathname.split('/');
+    return pathArray[pathArray.length - 1] || null;
+  };
+
+  // Utility function to handle back button click
+  handleBackButtonClick = (e) => {
+    e.preventDefault();
+    console.log('Back button clicked'); // Log for debugging
+
+    // Get the current hash from the URL
+    const currentHash = window.location.hash;
+
+    // Split the hash by "/"
+    const hashArray = currentHash.split('/');
+
+    // Find the index of 'entries'
+    const indexOfEntries = hashArray.indexOf('entries');
+
+    // Ensure 'entries' exists in the path and there are parts after it
+    if (indexOfEntries !== -1 && hashArray.length > indexOfEntries + 1) {
+      // Extract the dynamic path after 'entries'
+      const dynamicPathArray = hashArray.slice(indexOfEntries + 1);
+
+      // Remove '_index' from the end if it exists
+      if (dynamicPathArray[dynamicPathArray.length - 1] === '_index') {
+        dynamicPathArray.pop();
+      }
+
+      // Join the remaining parts to form the dynamic URL
+      const dynamicPath = dynamicPathArray.join('/');
+
+      // Build the live URL
+      const liveURL = `https://handbook.its.ecuad.ca/${dynamicPath}`;
+      console.log('Redirecting to:', liveURL); // Log the URL
+
+      // Redirect to the live URL
+      window.location.href = liveURL;
+    } else {
+      console.error('Unable to extract the necessary path segments for redirection');
+    }
+  };
+
   render() {
     const {
       user,
@@ -639,12 +683,12 @@ export class EditorToolbar extends React.Component {
 
     return (
       <ToolbarContainer>
-        <ToolbarSectionBackLink to={editorBackLink}>
+        <ToolbarSectionBackLink onClick={this.handleBackButtonClick}>
           <BackArrow>←</BackArrow>
           <div>
             <BackCollection>
               {t('editor.editorToolbar.backCollection', {
-                collectionLabel: collection.get('label'),
+                collectionLabel: collection ? collection.get('label') : 'Unknown Collection',
               })}
             </BackCollection>
             {hasChanged ? (
