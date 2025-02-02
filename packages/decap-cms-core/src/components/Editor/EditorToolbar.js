@@ -628,41 +628,64 @@ export class EditorToolbar extends React.Component {
   // Utility function to handle back button click
   handleBackButtonClick = e => {
     e.preventDefault();
-
-    // Figure out if we’re in local dev or production
-    const host = window.location.hostname;
-    const isLocal = host === 'localhost' || host === '127.0.0.1';
+  
+    // Decide local vs production
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
     const baseURL = isLocal ? 'http://localhost:1313' : 'https://handbook.its.ecuad.ca';
-
-    // Parse the Decap CMS #hash?path=... query
-    const hash = window.location.hash;
+  
+    // Extract ?path= from the #hash
+    const hash = window.location.hash || '';
     const queryIndex = hash.indexOf('?');
     if (queryIndex === -1) {
-      console.error('No query string found in the URL hash.');
+      console.error('No query string in the URL hash.');
       return;
     }
-
+  
     const queryString = hash.substring(queryIndex + 1);
     const params = new URLSearchParams(queryString);
-    const parentPath = params.get('path');
+    let parentPath = params.get('path') || '';
     if (!parentPath) {
-      console.error('Parent path not found in query parameters.');
+      console.error('No "path" param found.');
       return;
     }
-
-    // Remove the last segment from "folder/subfolder/page"
-    const segments = parentPath.split('/');
-    if (segments.length > 1) {
-      segments.pop();
+  
+    // parentPath might be "website/content/infra/systems/newfile"
+    let segments = parentPath.split('/').filter(Boolean);
+  
+    // Remove the last segment to go "one level up"
+    if (segments.length > 0) {
+      segments.pop(); 
     }
-
-    const finalPath = segments.join('/');
-    // Go up one folder, then append /_index so you land on that folder’s Hugo index page
+  
+    // Now segments might be ["website","content","infra","systems"] 
+    // or something like ["website","content"] if we were at the root doc
+  
+    // If you want to remove leftover duplication, do:
+    // e.g. if we have "website/content/website/content/infra/...", remove the extras:
+    let finalSegments = [];
+    let skipLeading = true;
+    for (let i = 0; i < segments.length; i++) {
+      // remove *first* occurrence of "website/content" but not repeated pairs
+      // Or if you want to remove *all* repeated pairs, do a while 
+      // but typically you'd remove once. We'll keep it simpler:
+      if (skipLeading && segments[i] === 'website' && i+1 < segments.length && segments[i+1] === 'content') {
+        // skip these two segments
+        i++; 
+        skipLeading = false;
+      } else {
+        finalSegments.push(segments[i]);
+      }
+    }
+    // finalSegments might now be ["infra","systems"], or empty
+  
+    // If finalSegments is empty, we’re basically at root => '/_index'
+    // Otherwise e.g. "infra/systems/_index"
+    const finalPath = finalSegments.join('/');
     const liveURL = finalPath
       ? `${baseURL}/${finalPath}/_index`
       : `${baseURL}/_index`;
-
-    console.log('Redirecting to:', liveURL);
+  
+    console.log('Back button ->', { parentPath, finalSegments, liveURL });
     window.location.href = liveURL;
   };
 
