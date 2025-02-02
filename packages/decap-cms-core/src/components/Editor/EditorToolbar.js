@@ -625,54 +625,35 @@ export class EditorToolbar extends React.Component {
     }
   };
 
-  // Utility to get the entry slug from the URL
-  getEntrySlug = () => {
-    const pathArray = window.location.pathname.split('/');
-    return pathArray[pathArray.length - 1] || null;
-  };
-
   // Utility function to handle back button click
   handleBackButtonClick = (e) => {
     e.preventDefault();
-    console.log('Back button clicked'); // Log for debugging
+    console.log('Back button clicked'); // Debug log
 
-    // Get the current hash from the URL
-    const currentHash = window.location.hash;
+    // Get the current hash from the URL.
+    // Example hash: "#/collections/handbook/new?path=infra/devices/enrollment&slug=testing-again&filename=testing-again.md"
+    const hash = window.location.hash;
+    
+    // Look for the '?' which marks the beginning of the query parameters in the hash.
+    const queryIndex = hash.indexOf('?');
+    if (queryIndex === -1) {
+      console.error('No query string found in the URL hash.');
+      return;
+    }
 
-    // Split the hash by "/"
-    const hashArray = currentHash.split('/');
-
-    // Find the index of 'entries'
-    const indexOfEntries = hashArray.indexOf('entries');
-
-    // Ensure 'entries' exists in the path and there are parts after it
-    if (indexOfEntries !== -1 && hashArray.length > indexOfEntries + 1) {
-      // Extract the dynamic path after 'entries'
-      let dynamicPathArray = hashArray.slice(indexOfEntries + 1);
-
-      // Remove '_index' from the end if it exists
-      if (dynamicPathArray[dynamicPathArray.length - 1] === '_index') {
-        dynamicPathArray.pop();
-      }
-      
-      // Remove the last segment so that the back button goes to the parent folder
-      if (dynamicPathArray.length > 1) {
-        dynamicPathArray.pop();
-      } else {
-        console.warn('Not enough segments to navigate to a parent folder.');
-      }
-
-      // Join the remaining parts to form the dynamic URL
-      const dynamicPath = dynamicPathArray.join('/');
-
-      // Build the live URL
-      const liveURL = `https://handbook.its.ecuad.ca/${dynamicPath}`;
-      console.log('Redirecting to:', liveURL); // Log the URL
-
-      // Redirect to the live URL
+    // Extract the query string portion.
+    const queryString = hash.substring(queryIndex + 1);
+    const params = new URLSearchParams(queryString);
+    
+    // Get the 'path' parameter, which represents the parent folder.
+    const parentPath = params.get('path');
+    if (parentPath) {
+      // Build the live URL for the parent folder.
+      const liveURL = `https://handbook.its.ecuad.ca/${parentPath}`;
+      console.log('Redirecting to parent folder:', liveURL);
       window.location.href = liveURL;
     } else {
-      console.error('Unable to extract the necessary path segments for redirection');
+      console.error('Parent path not found in query parameters.');
     }
   };
 
