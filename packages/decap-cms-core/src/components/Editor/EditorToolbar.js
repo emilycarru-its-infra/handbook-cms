@@ -628,34 +628,35 @@ export class EditorToolbar extends React.Component {
   // Utility function to handle back button click
   handleBackButtonClick = (e) => {
     e.preventDefault();
-    console.log('Back button clicked'); // Debug log
-
-    // Get the current hash from the URL.
-    // Example hash: "#/collections/handbook/new?path=infra/devices/enrollment&slug=testing-again&filename=testing-again.md"
+    console.log('Back button clicked');
+  
     const hash = window.location.hash;
-    
-    // Look for the '?' which marks the beginning of the query parameters in the hash.
     const queryIndex = hash.indexOf('?');
     if (queryIndex === -1) {
       console.error('No query string found in the URL hash.');
       return;
     }
-
-    // Extract the query string portion.
+  
     const queryString = hash.substring(queryIndex + 1);
     const params = new URLSearchParams(queryString);
-    
-    // Get the 'path' parameter, which represents the parent folder.
+  
     const parentPath = params.get('path');
     if (parentPath) {
-      // Build the live URL for the parent folder.
-      const liveURL = `https://handbook.its.ecuad.ca/${parentPath}`;
+      // Remove the last path segment (whatever it is)
+      const segments = parentPath.split('/');
+      if (segments.length > 1) {
+        segments.pop();
+      }
+  
+      const finalPath = segments.join('/');
+      const liveURL = `https://handbook.its.ecuad.ca/${finalPath}`;
       console.log('Redirecting to parent folder:', liveURL);
       window.location.href = liveURL;
     } else {
       console.error('Parent path not found in query parameters.');
     }
   };
+  
 
   render() {
     const {
