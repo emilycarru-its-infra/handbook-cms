@@ -626,37 +626,45 @@ export class EditorToolbar extends React.Component {
   };
 
   // Utility function to handle back button click
-  handleBackButtonClick = (e) => {
+  handleBackButtonClick = e => {
     e.preventDefault();
-    console.log('Back button clicked');
-  
+
+    // Figure out if we’re in local dev or production
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1';
+    const baseURL = isLocal ? 'http://localhost:1313' : 'https://handbook.its.ecuad.ca';
+
+    // Parse the Decap CMS #hash?path=... query
     const hash = window.location.hash;
     const queryIndex = hash.indexOf('?');
     if (queryIndex === -1) {
       console.error('No query string found in the URL hash.');
       return;
     }
-  
+
     const queryString = hash.substring(queryIndex + 1);
     const params = new URLSearchParams(queryString);
-  
     const parentPath = params.get('path');
-    if (parentPath) {
-      // Remove the last path segment (whatever it is)
-      const segments = parentPath.split('/');
-      if (segments.length > 1) {
-        segments.pop();
-      }
-  
-      const finalPath = segments.join('/');
-      const liveURL = `https://handbook.its.ecuad.ca/${finalPath}`;
-      console.log('Redirecting to parent folder:', liveURL);
-      window.location.href = liveURL;
-    } else {
+    if (!parentPath) {
       console.error('Parent path not found in query parameters.');
+      return;
     }
+
+    // Remove the last segment from "folder/subfolder/page"
+    const segments = parentPath.split('/');
+    if (segments.length > 1) {
+      segments.pop();
+    }
+
+    const finalPath = segments.join('/');
+    // Go up one folder, then append /_index so you land on that folder’s Hugo index page
+    const liveURL = finalPath
+      ? `${baseURL}/${finalPath}/_index`
+      : `${baseURL}/_index`;
+
+    console.log('Redirecting to:', liveURL);
+    window.location.href = liveURL;
   };
-  
 
   render() {
     const {
