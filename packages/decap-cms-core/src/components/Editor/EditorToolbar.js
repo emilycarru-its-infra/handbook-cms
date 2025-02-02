@@ -648,11 +648,18 @@ export class EditorToolbar extends React.Component {
     // Ensure 'entries' exists in the path and there are parts after it
     if (indexOfEntries !== -1 && hashArray.length > indexOfEntries + 1) {
       // Extract the dynamic path after 'entries'
-      const dynamicPathArray = hashArray.slice(indexOfEntries + 1);
+      let dynamicPathArray = hashArray.slice(indexOfEntries + 1);
 
       // Remove '_index' from the end if it exists
       if (dynamicPathArray[dynamicPathArray.length - 1] === '_index') {
         dynamicPathArray.pop();
+      }
+      
+      // Remove the last segment so that the back button goes to the parent folder
+      if (dynamicPathArray.length > 1) {
+        dynamicPathArray.pop();
+      } else {
+        console.warn('Not enough segments to navigate to a parent folder.');
       }
 
       // Join the remaining parts to form the dynamic URL
