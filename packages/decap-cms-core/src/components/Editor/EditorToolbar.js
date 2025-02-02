@@ -628,64 +628,60 @@ export class EditorToolbar extends React.Component {
   // Utility function to handle back button click
   handleBackButtonClick = e => {
     e.preventDefault();
-  
-    // Decide local vs production
+
+    // Are we local or production?
     const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
     const baseURL = isLocal ? 'http://localhost:1313' : 'https://handbook.its.ecuad.ca';
-  
-    // Extract ?path= from the #hash
+
+    // Extract ?path=... from the #hash
     const hash = window.location.hash || '';
     const queryIndex = hash.indexOf('?');
     if (queryIndex === -1) {
-      console.error('No query string in the URL hash.');
+      console.error('[BackButton] No query string in the URL hash:', hash);
       return;
     }
-  
+
     const queryString = hash.substring(queryIndex + 1);
     const params = new URLSearchParams(queryString);
+
+    // "parentPath" might be e.g. "website/content/infra/devices/provisioning/macintosh/school-manager"
     let parentPath = params.get('path') || '';
     if (!parentPath) {
-      console.error('No "path" param found.');
+      console.error('[BackButton] No "path" param found in:', queryString);
       return;
     }
-  
-    // parentPath might be "website/content/infra/systems/newfile"
+
+    // Split on slash
     let segments = parentPath.split('/').filter(Boolean);
-  
-    // Remove the last segment to go "one level up"
-    if (segments.length > 0) {
-      segments.pop(); 
+
+    console.log('[BackButton] raw parentPath =', parentPath);
+    console.log('[BackButton] raw segments =', segments);
+
+    // 1) If the last segment is not "_index", pop it to go up a folder
+    if (segments.length > 0 && segments[segments.length - 1] !== '_index') {
+      console.log('[BackButton] removing last segment ->', segments[segments.length - 1]);
+      segments.pop();
+    } else {
+      console.log('[BackButton] last segment is "_index" (or no segments)');
     }
-  
-    // Now segments might be ["website","content","infra","systems"] 
-    // or something like ["website","content"] if we were at the root doc
-  
-    // If you want to remove leftover duplication, do:
-    // e.g. if we have "website/content/website/content/infra/...", remove the extras:
-    let finalSegments = [];
-    let skipLeading = true;
-    for (let i = 0; i < segments.length; i++) {
-      // remove *first* occurrence of "website/content" but not repeated pairs
-      // Or if you want to remove *all* repeated pairs, do a while 
-      // but typically you'd remove once. We'll keep it simpler:
-      if (skipLeading && segments[i] === 'website' && i+1 < segments.length && segments[i+1] === 'content') {
-        // skip these two segments
-        i++; 
-        skipLeading = false;
-      } else {
-        finalSegments.push(segments[i]);
-      }
+
+    // 2) If you want to remove the leading "website/content" once, do something like:
+    //    e.g. if we have ["website","content","infra","devices"], remove the first two
+    if (segments.length >= 2 && segments[0] === 'website' && segments[1] === 'content') {
+      console.log('[BackButton] removing leading "website/content"');
+      segments = segments.slice(2);
     }
-    // finalSegments might now be ["infra","systems"], or empty
-  
-    // If finalSegments is empty, we’re basically at root => '/_index'
-    // Otherwise e.g. "infra/systems/_index"
-    const finalPath = finalSegments.join('/');
-    const liveURL = finalPath
-      ? `${baseURL}/${finalPath}/_index`
-      : `${baseURL}/_index`;
-  
-    console.log('Back button ->', { parentPath, finalSegments, liveURL });
+
+    // Rejoin
+    const finalPath = segments.join('/');
+
+    // If empty, go to the site root's "_index"
+    const liveURL = finalPath ? `${baseURL}/${finalPath}/_index` : `${baseURL}/_index`;
+
+    console.log('[BackButton] final segments =', segments);
+    console.log('[BackButton] => Navigating to:', liveURL);
+
+    // Navigate
     window.location.href = liveURL;
   };
 
