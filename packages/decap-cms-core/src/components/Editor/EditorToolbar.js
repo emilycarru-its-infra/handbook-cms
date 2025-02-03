@@ -114,18 +114,6 @@ const ToolbarSubSectionLast = styled(ToolbarSubSectionFirst)`
   justify-content: flex-end;
 `;
 
-const ToolbarSectionBackLink = styled(Link)`
-  ${styles.toolbarSection};
-  border-right-width: 1px;
-  font-weight: normal;
-  padding: 0 20px;
-
-  &:hover,
-  &:focus {
-    background-color: #f1f2f4;
-  }
-`;
-
 const ToolbarSectionMeta = styled.div`
   ${styles.toolbarSection};
   border-left-width: 1px;
@@ -625,66 +613,6 @@ export class EditorToolbar extends React.Component {
     }
   };
 
-  // Utility function to handle back button click
-  handleBackButtonClick = e => {
-    e.preventDefault();
-
-    // Are we local or production?
-    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-    const baseURL = isLocal ? 'http://localhost:1313' : 'https://handbook.its.ecuad.ca';
-
-    // Extract ?path=... from the #hash
-    const hash = window.location.hash || '';
-    const queryIndex = hash.indexOf('?');
-    if (queryIndex === -1) {
-      console.error('[BackButton] No query string in the URL hash:', hash);
-      return;
-    }
-
-    const queryString = hash.substring(queryIndex + 1);
-    const params = new URLSearchParams(queryString);
-
-    // "parentPath" might be e.g. "website/content/infra/devices/provisioning/macintosh/school-manager"
-    let parentPath = params.get('path') || '';
-    if (!parentPath) {
-      console.error('[BackButton] No "path" param found in:', queryString);
-      return;
-    }
-
-    // Split on slash
-    let segments = parentPath.split('/').filter(Boolean);
-
-    console.log('[BackButton] raw parentPath =', parentPath);
-    console.log('[BackButton] raw segments =', segments);
-
-    // 1) If the last segment is not "_index", pop it to go up a folder
-    if (segments.length > 0 && segments[segments.length - 1] !== '_index') {
-      console.log('[BackButton] removing last segment ->', segments[segments.length - 1]);
-      segments.pop();
-    } else {
-      console.log('[BackButton] last segment is "_index" (or no segments)');
-    }
-
-    // 2) If you want to remove the leading "website/content" once, do something like:
-    //    e.g. if we have ["website","content","infra","devices"], remove the first two
-    if (segments.length >= 2 && segments[0] === 'website' && segments[1] === 'content') {
-      console.log('[BackButton] removing leading "website/content"');
-      segments = segments.slice(2);
-    }
-
-    // Rejoin
-    const finalPath = segments.join('/');
-
-    // If empty, go to the site root's "_index"
-    const liveURL = finalPath ? `${baseURL}/${finalPath}/_index` : `${baseURL}/_index`;
-
-    console.log('[BackButton] final segments =', segments);
-    console.log('[BackButton] => Navigating to:', liveURL);
-
-    // Navigate
-    window.location.href = liveURL;
-  };
-
   render() {
     const {
       user,
@@ -699,21 +627,6 @@ export class EditorToolbar extends React.Component {
 
     return (
       <ToolbarContainer>
-        <ToolbarSectionBackLink onClick={this.handleBackButtonClick}>
-          <BackArrow>←</BackArrow>
-          <div>
-            <BackCollection>
-              {t('editor.editorToolbar.backCollection', {
-                collectionLabel: collection ? collection.get('label') : 'Unknown Collection',
-              })}
-            </BackCollection>
-            {hasChanged ? (
-              <BackStatusChanged>{t('editor.editorToolbar.unsavedChanges')}</BackStatusChanged>
-            ) : (
-              <BackStatusUnchanged>{t('editor.editorToolbar.changesSaved')}</BackStatusUnchanged>
-            )}
-          </div>
-        </ToolbarSectionBackLink>
         <ToolbarSectionMain>
           <ToolbarSubSectionFirst>
             {hasWorkflow ? this.renderWorkflowControls() : this.renderSimpleControls()}
