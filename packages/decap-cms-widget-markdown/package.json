@@ -1,0 +1,67 @@
+{
+  "name": "decap-cms-widget-markdown",
+  "description": "Widget for editing markdown in Decap CMS.",
+  "version": "3.13.0",
+  "homepage": "https://www.decapcms.org/docs/widgets/#markdown",
+  "repository": "https://github.com/decaporg/decap-cms/tree/main/packages/decap-cms-widget-markdown",
+  "bugs": "https://github.com/decaporg/decap-cms/issues",
+  "module": "dist/esm/index.js",
+  "main": "dist/decap-cms-widget-markdown.js",
+  "license": "MIT",
+  "keywords": [
+    "decap-cms",
+    "widget",
+    "markdown",
+    "editor"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "develop": "pnpm run build:esm --watch",
+    "build": "cross-env NODE_ENV=production webpack",
+    "build:esm": "cross-env NODE_ENV=esm babel src --out-dir dist/esm --ignore \"**/__tests__\" --root-mode upward"
+  },
+  "dependencies": {
+    "detab": "catalog:",
+    "dompurify": "catalog:",
+    "is-hotkey": "catalog:",
+    "is-url": "catalog:",
+    "mdast-util-definitions": "catalog:",
+    "mdast-util-to-string": "catalog:",
+    "rehype-parse": "catalog:",
+    "rehype-remark": "catalog:",
+    "rehype-remove-comments": "catalog:",
+    "rehype-stringify": "catalog:",
+    "remark-parse": "catalog:",
+    "remark-rehype": "catalog:",
+    "remark-slate": "catalog:",
+    "remark-slate-transformer": "catalog:",
+    "remark-stringify": "catalog:",
+    "slate": "catalog:",
+    "slate-base64-serializer": "catalog:",
+    "slate-dom": "catalog:",
+    "slate-history": "catalog:",
+    "slate-hyperscript": "catalog:",
+    "slate-plain-serializer": "catalog:",
+    "slate-react": "catalog:",
+    "slate-soft-break": "catalog:",
+    "unified": "catalog:",
+    "unist-builder": "catalog:",
+    "unist-util-visit-parents": "catalog:",
+    "vfile-location": "catalog:"
+  },
+  "peerDependencies": {
+    "@emotion/react": "catalog:",
+    "@emotion/styled": "catalog:",
+    "decap-cms-ui-default": "workspace:*",
+    "immutable": "catalog:",
+    "lodash": "catalog:",
+    "prop-types": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-immutable-proptypes": "catalog:"
+  },
+  "devDependencies": {
+    "commonmark": "catalog:",
+    "commonmark-spec": "catalog:"
+  }
+}
