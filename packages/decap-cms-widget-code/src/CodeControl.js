@@ -55,7 +55,14 @@ function valueToOption(val) {
 
 const modes = languages.map(valueToOption);
 
-const themes = ['default', 'material'];
+// `auto` follows the system colour scheme: `material` when it is dark,
+// `default` when it is light.
+const themes = ['auto', 'default', 'material'];
+
+const darkScheme =
+  typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(prefers-color-scheme: dark)')
+    : null;
 
 const settingsPersistKeys = {
   theme: 'cms.codemirror.theme',
@@ -83,7 +90,8 @@ export default class CodeControl extends Component {
     keyMap: localStorage.getItem(settingsPersistKeys['keyMap']) || 'default',
     settingsVisible: false,
     codeMirrorKey: crypto.randomUUID(),
-    theme: localStorage.getItem(settingsPersistKeys['theme']) || themes[themes.length - 1],
+    theme: localStorage.getItem(settingsPersistKeys['theme']) || 'auto',
+    prefersDark: !!darkScheme?.matches,
     lastKnownValue: this.valueIsMap() ? this.props.value?.get(this.keys.code) : this.props.value,
   };
 
@@ -107,6 +115,23 @@ export default class CodeControl extends Component {
     this.setState({
       lang: this.getInitialLang() || '',
     });
+    darkScheme?.addEventListener?.('change', this.handleSchemeChange);
+  }
+
+  componentWillUnmount() {
+    darkScheme?.removeEventListener?.('change', this.handleSchemeChange);
+  }
+
+  handleSchemeChange = event => {
+    this.setState({ prefersDark: event.matches });
+  };
+
+  getCodeMirrorTheme() {
+    const { theme, prefersDark } = this.state;
+    if (theme === 'auto') {
+      return prefersDark ? 'material' : 'default';
+    }
+    return theme;
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -122,7 +147,7 @@ export default class CodeControl extends Component {
   }
 
   async updateCodeMirrorProps(prevState) {
-    const keys = ['lang', 'theme', 'keyMap'];
+    const keys = ['lang', 'theme', 'keyMap', 'prefersDark'];
     const changedProps = getChangedProps(prevState, this.state, keys);
     if (changedProps) {
       // Check if this is the initial setting of the language prop
@@ -276,10 +301,13 @@ export default class CodeControl extends Component {
   setInactive = () => this.setState({ isActive: false });
 
   render() {
-    const { classNameWrapper, forID, widget, isNewEditorComponent } = this.props;
+    const { classNameWrapper, forID, widget, isEditorComponent, isNewEditorComponent } = this.props;
     const { lang, settingsVisible, keyMap, codeMirrorKey, theme, lastKnownValue } = this.state;
     const langInfo = this.getLanguageByName(lang);
     const mode = langInfo?.mimeType || langInfo?.mode;
+    // A code block inside the markdown editor is as tall as its content, so a
+    // short snippet does not leave a tall empty box in the middle of the text.
+    const minHeight = isEditorComponent ? '0' : '300px';
 
     return (
       <ClassNames>
@@ -322,11 +350,11 @@ export default class CodeControl extends Component {
                 .CodeMirror {
                   height: auto !important;
                   cursor: text;
-                  min-height: 300px;
+                  min-height: ${minHeight};
                 }
 
                 .CodeMirror-scroll {
-                  min-height: 300px;
+                  min-height: ${minHeight};
                 }
               `}
               options={{
@@ -337,7 +365,7 @@ export default class CodeControl extends Component {
                   Tab: 'indentMore',
                   ...(widget.codeMirrorConfig.extraKeys || {}),
                 },
-                theme,
+                theme: this.getCodeMirrorTheme(),
                 mode,
                 keyMap,
                 viewportMargin: Infinity,
